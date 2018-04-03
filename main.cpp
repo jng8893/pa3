@@ -1,8 +1,26 @@
 #include <iostream>
+#include <fstream>
+
+using namespace std;
+
+class Compiler
+{
+
+};
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-    std::cout << "Hello me!" << std::endl;
-    std::cout << "Hello me part 2!" << std::endl;
+
+    ifstream inFile("code.txt", ios::in);
+    if (! inFile)
+    {
+        cerr << "Unable to open file.";
+        return -1;
+    }
+    char ch;
+    while (inFile.get(ch))
+    {
+        cout.put(ch);
+    }
+
     return 0;
 }
