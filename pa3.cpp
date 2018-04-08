@@ -2,20 +2,9 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include "pa3.h"
 
 using namespace std;
-
-/*class Compiler
-{
-    public:
-        vector<string> keywords();
-        vector<string> identifiers();
-        vector<string> constants();
-        vector<string> operators();
-        vector<string> delimiters();
-
-        vector parseUppercase ();
-};*/
 
 int main()
 {
@@ -32,15 +21,14 @@ int main()
     inFile.open(fileName);
 
     char ch;
-    while (inFile.get(ch))  //Print out file contents.
+    /*while (inFile.get(ch))  //Print out file contents.
     {
         cout.put(ch);
-    }
+    }*/
 
-    vector<char> text;
-    while (inFile.get(ch))
+    while (!inFile.eof())
     {
-        text.push_back(ch);
+        ;
     }
   /*  vector<char>::iterator it = text.begin();
     for (auto it = text.begin(); it != text.end(); it++)
