@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "pa3.h"
 
 using namespace std;
@@ -28,7 +29,17 @@ int main()
 
     while (!inFile.eof())
     {
-        ;
+        char line[256];
+        inFile.getline(line, 256);
+        string to_token(line);
+//        cout << to_token;
+        for (int i = 0; i < to_token.length(); i++)
+        {
+            if (to_token[i] == ' ' || to_token[i] == '\n')
+                to_token.erase(i, 1);
+        }
+        cout << to_token << endl;
+        inFile.clear();
     }
   /*  vector<char>::iterator it = text.begin();
     for (auto it = text.begin(); it != text.end(); it++)
