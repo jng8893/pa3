@@ -8,21 +8,21 @@ using namespace std;
 
 struct Token
 {
-    string input;
+    string text;
     string type;
-    Token(string input, string type)
+    Token(string text, string type)
     {
-        this->input = input;
+        this->text = text;
         this->type = type;
     }
-    string get_type()
+    /*string get_type()
     {
         return type;
     }
-    string get_input()
+    string get_text()
     {
-        return input;
-    }
+        return text;
+    }*/
 };
 
 struct Line
@@ -43,6 +43,7 @@ struct Block
     }
 };
 
+//Definitions of different types of tokens
 struct Keyword : Token
 {
     Keyword(string input) : Token(input, "keyword"){}
@@ -70,13 +71,23 @@ struct Other : Token
 
 struct Compiler
 {
-    Block codeBlock;
+    Block codeBlock;    //Stores tokenized text file
+    //Stores tokens by categories
     vector<Token> keywords;
     vector<Token> identifiers;
     vector<Token> constants;
     vector<Token> operators;
     vector<Token> delimiters;
     vector<Token> others;
+
+    bool is_operator(char i)
+    {
+        return (i == '+' || i == '-' || i == '*' || i == '/');
+    }
+    bool is_delimiter(char i)
+    {
+        return (i == ',' || i == ';' || i == '(' || ')');
+    }
 
     void add_keywords(Token in)
     {
@@ -85,7 +96,7 @@ struct Compiler
     }
     void add_identifiers(Token in)
     {
-        if (in.type == "indentifier")
+        if (in.type == "identifier")
             identifiers.push_back(in);
     }
     void add_constants(Token in)
@@ -108,40 +119,169 @@ struct Compiler
         if (in.type == "other")
             others.push_back(in);
     }
-     void tokenize_text(string temp, string type, char input[], int i)
+
+    // ======== Methods required for tokenizing a line ========
+
+    //Move to next character in string for tokenization
+    void next(string& input, int size) {
+        input = input.substr(size);
+    }
+
+    //Check "keywords" string to be created as tokens for errors
+    bool check_keyword(string input)
     {
-        Line output;
-        string type2;
+        string check = input;
+        return (check == "FOR" || check == "BEGIN" || check == "END");
+    }
 
+    //Make tokens of different types
 
-        if (isupper(input[i])) //Check for keyword char
+    void make_key_token(string& input, vector<Token>& tokens)
+    {
+        char parser = input[0];
+        string token(1, parser);
+        next(input, 1);
+        while (input.size() > 0)
         {
-            temp += input[i];
-            type2 = "keyword";
+            parser = input[0];
+            if (isupper(parser))
+            {
+                token += parser;
+            }
+            else
+                break;
         }
-        else if (islower(input[i])) //Check for identifier char
+        if (check_keyword(token))
+            tokens.push_back(Keyword(token));
+        else
+            tokens.push_back(Other(token));
+    }
+    void make_id_token(string& input, vector<Token>& tokens)
+    {
+        char parser = input[0];
+        string token(1, parser);
+        next(input, 1);
+        while (input.size() > 0)
         {
-            temp += input[i];
-            type2 = "identifier";
+            parser = input[0];
+            if (islower(parser))
+            {
+                token += parser;
+            }
+            else
+                break;
         }
-        else if (isdigit(input[i])) //Check for constant (number) char
+        tokens.push_back(Keyword(token));
+    }
+    void make_const_token(string& input, vector<Token>& tokens)
+    {
+        char parser = input[0];
+        string token(1, parser);
+        next(input, 1);
+        while (input.size() > 0)
         {
-            temp += input[i];
-            type2 = "constant";
+            parser = input[0];
+            if (isnumber(parser))
+            {
+                token += parser;
+            }
+            else
+                break;
         }
-        else if (input [i] == '+' || input [i] == '-' || input [i] == '*' || input [i] == '/') //Check for operator
+        tokens.push_back(Constant(token));
+    }
+    void make_op_token(string& input, vector<Token>& tokens)
+    {
+        char parser = input[0];
+        string token(1, parser);
+        next(input, 1);
+        while (input.size() > 0)
         {
-            temp += input[i];
-            type2 = "operator";
+            parser = input[0];
+            if (is_operator(parser))
+            {
+                token += parser;
+            }
+            else
+                break;
         }
-        else if (input [i] == ',' || input [i] == ';' || input [i] == ) //Check for delimiters
+        tokens.push_back(Keyword(token));
+    }
+    void make_delim_token(string& input, vector<Token>& tokens)
+    {
+        char parser = input[0];
+        string token(1, parser);
+        next(input, 1);
+        while (input.size() > 0)
         {
-            temp += input[i];
-            type2 = "operator";
+            parser = input[0];
+            if (is_delimiter(parser))
+            {
+                token += parser;
+            }
+            else
+                break;
         }
-        tokenize_text(temp, type, input[], ++i);
+        tokens.push_back(Delimiter(token));
+    }
 
+    void tokenize_line(string& input, vector<Token>& tokens)
+    {
+        if (input.size() == 0)
+            return;
+        char parser = input[0];
 
+        if (isupper(parser))
+        {
+            make_key_token(input, tokens);
+            return tokenize_line(input, tokens);
+        }
+        else if (islower(parser))
+        {
+            make_id_token(input, tokens);
+            return tokenize_line(input, tokens);
+
+        }
+        else if (isnumber(parser))
+        {
+            make_const_token(input, tokens);
+            return tokenize_line(input, tokens);
+
+        }
+        else if (is_operator(parser))
+        {
+            make_op_token(input, tokens);
+            return tokenize_line(input, tokens);
+
+        }
+        else if (is_delimiter(parser))
+        {
+            make_delim_token(input, tokens);
+            return tokenize_line(input, tokens);
+        }
+        else
+        {
+            cerr << "Unknown token encountered: " << parser << endl;
+            next(input, 1);
+            return tokenize_line(input, tokens);
+        }
+
+    }
+     Block tokenize_text(ifstream& inFile)
+    {
+        Block output;
+
+        while(!inFile.eof())
+        {
+            Line temp;
+
+            char lineArr[256];
+            inFile.getline(lineArr, 256);
+            string line(lineArr);
+
+            tokenize_line(line, temp.tokensInLine);
+            output.add_line(temp);
+        }
         return output;
     }
 
